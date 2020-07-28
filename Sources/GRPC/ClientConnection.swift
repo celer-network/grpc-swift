@@ -169,6 +169,10 @@ extension ClientConnection: GRPCChannel {
     let (logger, requestID) = self.populatedLoggerAndRequestID(from: callOptions)
     logger.debug("starting rpc", metadata: ["path": "\(path)"])
 
+    if let signal = signal {
+      signal.signal()
+    }
+    
     let call = UnaryCall<Serializer.Input, Deserializer.Output>.makeOnHTTP2Stream(
       multiplexer: self.multiplexer,
       serializer: serializer,
@@ -180,6 +184,10 @@ extension ClientConnection: GRPCChannel {
 
     call.send(self.makeRequestHead(path: path, options: callOptions, requestID: requestID), request: request)
 
+    if let signal = signal {
+      signal.wait()
+    }
+    
     return call
   }
 
