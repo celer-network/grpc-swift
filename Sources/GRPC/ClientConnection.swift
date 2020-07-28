@@ -72,6 +72,8 @@ import SwiftProtobuf
 /// See `BaseClientCall` for a description of the pipelines associated with each HTTP/2 stream.
 public class ClientConnection {
   private let connectionManager: ConnectionManager
+  
+  var signal: DispatchSemaphore?
 
   private func getChannel() -> EventLoopFuture<Channel> {
     switch self.configuration.callStartBehavior.wrapped {
@@ -112,10 +114,11 @@ public class ClientConnection {
   ///
   /// - Important: Users should prefer using `ClientConnection.secure(group:)` to build a connection
   ///   with TLS, or `ClientConnection.insecure(group:)` to build a connection without TLS.
-  public init(configuration: Configuration) {
+  public init(configuration: Configuration, signal: DispatchSemaphore? = nil) {
     self.configuration = configuration
     self.scheme = configuration.tls == nil ? "http" : "https"
     self.authority = configuration.target.host
+    self.signal = signal 
     self.connectionManager = ConnectionManager(
       configuration: configuration,
       logger: configuration.backgroundActivityLogger
